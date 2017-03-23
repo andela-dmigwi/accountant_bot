@@ -1,28 +1,35 @@
-import sys
 import json
 from app import create_app
-from flask import request
+from flask import request, make_response
 from config import verify_token, page_access_token, fb_url
 
 app = create_app()
 
 
-@app.route('/', methods=['GET'])
+@app.route('/home')
+def index():
+    return make_response("Hello world", 200)
+
+
+@app.route('/', methods=['GET', 'POST'])
 def verify():
     # when the endpoint is registered as a webhook, it must echo back
     # the 'hub.challenge' value it receives in the query arguments
-    if (request.args.get("hub.mode") == "subscribe" and
-            request.args.get("hub.challenge")):
-        if not request.args.get("hub.verify_token") == verify_token:
-            return "Verification token mismatch", 403
-        return request.args["hub.challenge"], 200
+    if request.method == 'GET':
+        hub_mode = request.args.get("hub.mode")
+        hub_challenge = request.args.get("hub.challenge")
+        if (hub_mode == "subscribe" and hub_challenge):
+            hub_verify_token = request.args.get("hub.verify_token")
+            if not hub_verify_token == verify_token:
+                return make_response("Verification token mismatch", 403)
+            return make_response(hub_challenge, 200)
 
-    return "Hello world", 200
+        return make_response("Hello world", 200)
+    else:
+        webhook()
 
 
-@app.route('/', methods=['POST'])
 def webhook():
-
     # endpoint for processing incoming messaging events
 
     data = request.get_json()
@@ -57,7 +64,7 @@ def webhook():
                 if messaging_event.get("postback"):
                     pass
 
-    return "ok", 200
+    return make_response("ok", 200)
 
 
 def send_message(recipient_id, message_text):
@@ -88,7 +95,6 @@ def send_message(recipient_id, message_text):
 
 def log(message):  # simple wrapper for logging to stdout on heroku
     print (message)
-    sys.stdout.flush()
 
 
 if __name__ == '__main__':
