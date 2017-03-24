@@ -77,7 +77,6 @@ def send_message(recipient_id, message_text):
         "message": {"text": message_text}
     })
     url = fb_url + "/me/messages"
-    print('URL', url)
     r = requests.post(url, params=params,
                       headers=headers, data=data)
     if r.status_code != 200:
@@ -87,7 +86,3 @@ def send_message(recipient_id, message_text):
 
 def log(message):  # simple wrapper for logging to stdout on heroku
     print(message)
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
