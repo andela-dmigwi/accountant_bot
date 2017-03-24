@@ -1,4 +1,4 @@
-from app import app
+from video_chat_bot import app
 from app.models import db
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager

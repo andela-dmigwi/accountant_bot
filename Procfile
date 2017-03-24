@@ -1,1 +1,1 @@
-web: gunicorn accountant:app --log-file=-
+web: source ./build.sh;

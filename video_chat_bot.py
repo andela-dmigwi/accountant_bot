@@ -1,7 +1,7 @@
 from app import create_app
 from flask import request, make_response
 from config import verify_token, page_access_token
-from fbmq import page as Page
+from fbmq import Page
 
 app = create_app()
 page = Page(page_access_token)
@@ -18,8 +18,9 @@ def verify():
         if not hub_verify_token == verify_token:
             return make_response("Verification token mismatch", 403)
         return make_response(hub_challenge, 200)
-
-    return make_response("Hello world", 200)
+    # Response tests successful deployment of the bot..
+    return make_response("Hello world, this is a Facebook"
+                         " Video Chat Bot. Enjoy!!", 200)
 
 
 @app.route('/webhook', methods=['POST'])
