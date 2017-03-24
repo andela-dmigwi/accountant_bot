@@ -2,7 +2,7 @@ from app import create_app
 from flask import request, make_response
 from config import verify_token, page_access_token
 from fbmq import Page, Attachment
-from camera import VideoCamera
+from app.camera import VideoCamera
 
 app = create_app()
 page = Page(page_access_token)
