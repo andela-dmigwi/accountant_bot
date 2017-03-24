@@ -1,4 +1,5 @@
 import json
+import requests
 from app import create_app
 from flask import request, make_response
 from config import verify_token, page_access_token, fb_url
@@ -44,8 +45,10 @@ def webhook():
                     # the recipient's ID, which should be your page's facebook
                     # ID
                     recipient_id = messaging_event["recipient"]["id"]
-                    message_text = messaging_event["message"][ "text"]
-                        # the message's text
+                    message_text = messaging_event["message"]["text"]
+                    # the message's text
+                    print('Response Id:', recipient_id,
+                          'message text:', message_text)
 
                     send_message(sender_id, "got it, thanks!")
 
@@ -59,7 +62,6 @@ def webhook():
                 if messaging_event.get("postback"):
                     pass
 
-
     return make_response("ok", 200)
 
 
@@ -68,29 +70,23 @@ def send_message(recipient_id, message_text):
     log("sending message to {recipient}: {text}".format(
         recipient=recipient_id, text=message_text))
 
-    params = {
-        "access_token": page_access_token
-    }
-    headers = {
-        "Content-Type": "application/json"
-    }
+    params = {"access_token": page_access_token}
+    headers = {"Content-Type": "application/json"}
     data = json.dumps({
-        "recipient": {
-            "id": recipient_id
-        },
-        "message": {
-            "text": message_text
-        }
+        "recipient": {"id": recipient_id},
+        "message": {"text": message_text}
     })
-    r = requests.post( fb_url + "/me/messages",
-                      params=params, headers=headers, data=data)
+    url = fb_url + "/me/messages"
+    print('URL', url)
+    r = requests.post(url, params=params,
+                      headers=headers, data=data)
     if r.status_code != 200:
         log(r.status_code)
         log(r.text)
 
 
 def log(message):  # simple wrapper for logging to stdout on heroku
-    print (message)
+    print(message)
 
 
 if __name__ == '__main__':
