@@ -1,7 +1,8 @@
 from app import create_app
 from flask import request, make_response
 from config import verify_token, page_access_token
-from fbmq import Page
+from fbmq import Page, Attachment
+from camera import VideoCamera
 
 app = create_app()
 page = Page(page_access_token)
@@ -26,19 +27,29 @@ def verify():
 @app.route('/', methods=['POST'])
 def webhook():
     page.handle_webhook(request.get_data(as_text=True))
-    return "ok"
+    return make_response("ok", 200)
 
 
 @page.handle_message
 def message_handler(event):
     """:type event: fbmq.Event"""
     sender_id = event.sender_id
-    message = event.message_text
-
-    page.send(sender_id, "thank you! your message is '%s'" % message)
+    recipient_id = event.recipient_id
+    # message = event.message_text
+    print ('Sender:', sender_id, 'Recipient: ', recipient_id)
+    page.send(sender_id, gen(VideoCamera()))
+    page.send(recipient_id, gen(VideoCamera()))
+    # page.send(sender_id, "thank you! your message is '%s'" % message)
 
 
 @page.after_send
 def after_send(payload, response):
     """:type payload: fbmq.Payload"""
     print("complete")
+
+
+def gen(camera):
+    while True:
+        frame = camera.get_frame()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
