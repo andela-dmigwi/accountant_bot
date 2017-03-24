@@ -6,29 +6,22 @@ from config import verify_token, page_access_token, fb_url
 app = create_app()
 
 
-@app.route('/home')
-def index():
-    return make_response("Hello world", 200)
-
-
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 def verify():
     # when the endpoint is registered as a webhook, it must echo back
     # the 'hub.challenge' value it receives in the query arguments
-    if request.method == 'GET':
-        hub_mode = request.args.get("hub.mode")
-        hub_challenge = request.args.get("hub.challenge")
-        if (hub_mode == "subscribe" and hub_challenge):
-            hub_verify_token = request.args.get("hub.verify_token")
-            if not hub_verify_token == verify_token:
-                return make_response("Verification token mismatch", 403)
-            return make_response(hub_challenge, 200)
+    hub_mode = request.args.get("hub.mode")
+    hub_challenge = request.args.get("hub.challenge")
+    if (hub_mode == "subscribe" and hub_challenge):
+        hub_verify_token = request.args.get("hub.verify_token")
+        if not hub_verify_token == verify_token:
+            return make_response("Verification token mismatch", 403)
+        return make_response(hub_challenge, 200)
 
-        return make_response("Hello world", 200)
-    else:
-        webhook()
+    return make_response("Hello world", 200)
 
 
+@app.route('/', methods=['POST'])
 def webhook():
     # endpoint for processing incoming messaging events
 
@@ -36,6 +29,8 @@ def webhook():
     # you may not want to log every incoming message
     # in production, but it's good for testing
     log(data)
+    if not data:
+        return make_response("ok", 200)
 
     if data["object"] == "page":
 
@@ -63,6 +58,7 @@ def webhook():
                 # user clicked/tapped "postback" button in earlier message
                 if messaging_event.get("postback"):
                     pass
+
 
     return make_response("ok", 200)
 
