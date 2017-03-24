@@ -26,6 +26,7 @@ def verify():
 
 @app.route('/', methods=['POST'])
 def webhook():
+    print(request.get_json())
     page.handle_webhook(request.get_data(as_text=True))
     return make_response("ok", 200)
 
@@ -37,9 +38,12 @@ def message_handler(event):
     recipient_id = event.recipient_id
     # message = event.message_text
     print ('Sender:', sender_id, 'Recipient: ', recipient_id)
-    page.send(sender_id, gen(VideoCamera()))
-    page.send(recipient_id, gen(VideoCamera()))
-    # page.send(sender_id, "thank you! your message is '%s'" % message)
+    try:
+        page.send(sender_id, Attachment.Image(gen(VideoCamera())))
+        page.send(recipient_id, gen(VideoCamera()))
+    except Exception as e:
+        print('Error >>>>> {}'.format(e))
+        page.send(sender_id, "........An error Occured........")
 
 
 @page.after_send
