@@ -23,7 +23,7 @@ def verify():
                          " Video Chat Bot. Enjoy!!", 200)
 
 
-@app.route('/webhook', methods=['POST'])
+@app.route('/', methods=['POST'])
 def webhook():
     page.handle_webhook(request.get_data(as_text=True))
     return "ok"
