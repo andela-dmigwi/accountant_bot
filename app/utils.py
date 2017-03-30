@@ -2,6 +2,7 @@ import jwt
 import json
 import requests
 from datetime import datetime
+from flask import redirect
 from config import fb_url, page_access_token, main_url
 
 JWT_SECRET = 'secret'
@@ -10,19 +11,28 @@ json_headers = {"Content-Type": "application/json"}
 params = {"access_token": page_access_token}
 
 
-def call_user(user_id, room_name):
-    data = {"user_id": user_id,
+def call_user(sender_id, recipient_id, room_name):
+    data = {"recipient_id": sender_id,
+            "sender_id": recipient_id,
             "time": datetime.date() + 300000,
             "room": room_name}
     token = jwt.encode(data, JWT_SECRET, JWT_ALGORITHM)
-    return '{}/call/{}'.format(main_url, token)
+    send_message(recipient_id,
+                 'You have been invited to join the following call:'
+                 ' {}/call/{}'.format(main_url, token))
+    return redirect('/call/{}'.format(token))
 
 
-def send_message(recipient_id, message_text):
-    data = json.dumps({
+def send_message(recipient_id, message_text, template=None):
+    data = {
         "recipient": {"id": recipient_id},
         "message": {"text": message_text}
-    })
+    }
+
+    if template:
+        data['message'] = template
+
+    data = json.dumps(data)
     url = "{}/me/messages".format(fb_url)
     r = requests.post(url, params=params,
                       headers=json_headers, data=data)

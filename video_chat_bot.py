@@ -67,6 +67,15 @@ def webhook():
 
 
 @app.route('/call/{id}', methods=['GET'])
+def validate_user():
+    if not id:
+        return redirect('/nonexistent.html')
+
+    session['message'] = id
+    return redirect('/video_call', token=message)
+
+
+@app.route('/video_call', methods=['POST'])
 def live_feed():
     return render_template('index.html')
 
