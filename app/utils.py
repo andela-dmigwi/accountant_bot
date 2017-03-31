@@ -1,26 +1,52 @@
 import jwt
 import json
 import requests
-from datetime import datetime
+# from datetime import datetime
 from flask import redirect
-from config import fb_url, page_access_token, main_url
+from haikunator import Haikunator
+from app.models import Transactions
+from config import (fb_url, page_access_token, main_url,
+                    JWT_ALGORITHM, JWT_SECRET)
 
-JWT_SECRET = 'secret'
-JWT_ALGORITHM = 'HS256'
+
 json_headers = {"Content-Type": "application/json"}
 params = {"access_token": page_access_token}
+room_name = ''
 
 
-def call_user(sender_id, recipient_id, room_name):
-    data = {"recipient_id": sender_id,
-            "sender_id": recipient_id,
-            "time": datetime.date() + 300000,
-            "room": room_name}
+def tokenize(data):
     token = jwt.encode(data, JWT_SECRET, JWT_ALGORITHM)
+    return token
+
+
+def call_user(sender_id, recipient_id):
+    sender_details = Transactions.query.filter_by(
+        sender_id=sender_id).first()
+    sender_data = ''
+    recipient_data = ''
+
+    # Check if a session created by sender exists
+    if (sender_details.session):
+        session = sender_details.session
+    else:
+        sender_data = {"user": recipient_id,
+                       "session": Haikunator.haikunate()}
+        Transactions(sender_data).save()
+
+    try:
+        recipient_data = {"user": recipient_id,
+                          "session": session}
+        # Push data to a database
+        Transactions(recipient_data).save()
+    except Exception:
+        pass
+
+    recipient_token = tokenize(recipient_data)
     send_message(recipient_id,
                  'You have been invited to join the following call:'
-                 ' {}/call/{}'.format(main_url, token))
-    return redirect('/call/{}'.format(token))
+                 ' {}/call/{}'.format(main_url, recipient_token))
+    sender_token = tokenize(sender_data)
+    return redirect('/call/{}'.format(sender_token))
 
 
 def send_message(recipient_id, message_text, template=None):
@@ -45,7 +71,7 @@ def get_user_details(user_id):
     r = requests.get(url, params=params)
     if r.error:
         return 'User not found'
-    return r.json()
+    return r.get_json()
 
 
 def get_response_one(text_message):

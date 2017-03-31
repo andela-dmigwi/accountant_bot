@@ -1,7 +1,8 @@
+import jwt
 from app import create_app
 from flask import request, make_response, render_template
 from app.utils import *
-from haikunator import Haikunator
+from config import JWT_ALGORITHM, JWT_SECRET
 
 
 app = create_app()
@@ -66,17 +67,24 @@ def webhook():
     return make_response("ok", 200)
 
 
-@app.route('/call/{id}', methods=['GET'])
+@app.route('/call/{id}', methods=['POST'])
 def validate_user():
     if not id:
         return redirect('/nonexistent.html')
-
-    session['message'] = id
-    return redirect('/video_call', token=message)
+    response = redirect('/video_call', code=307)
+    response.set_cookie('data', value=id)
+    return response
 
 
 @app.route('/video_call', methods=['POST'])
 def live_feed():
+    try:
+        data = request.get_cookie('data')
+        data = jwt.decode(data, JWT_SECRET, algorithms=JWT_ALGORITHM)
+        # Query the infomation from the database
+        # result = Transaction.query.filter_by(data).First()
+    except Exception:
+        return redirect('/nonexistent.html')
     return render_template('index.html')
 
 
