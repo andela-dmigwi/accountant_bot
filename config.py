@@ -16,8 +16,8 @@ class Config(object):
     DEBUG = False
     TESTING = False
     SQLALCHEMY_TRACK_MODIFICATIONS = True
-    SECRET_KEY = 'confidential top secret!'
+    SECRET_KEY = 'confidential_top_secret!'
     TRAP_HTTP_EXCEPTIONS = False
     PRESERVE_CONTEXT_ON_EXCEPTION = False
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///%s/accountant.db' % BASEDIR
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///{}/accountant.db'.format(BASEDIR)
     DEBUG = True
