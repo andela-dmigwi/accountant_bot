@@ -39,20 +39,9 @@ def webhook():
                 # recipient_id = messaging_event["recipient"]["id"]
 
                 if messaging_event.get("message"):  # someone sent us a message
-                    response_message = ''
                     message_text = messaging_event["message"]["text"]
-                    # Get the First reponse Choice
-                    response_message = get_response_one(message_text)
-
-                    # Make a call if the user exist
-                    if not response_message:
-                        response_message = get_response_two(message_text)
-
-                    # Get Third Response choice
-                    if not response_message:
-                        response_message = get_response_three(message_text)
-
-                    send_message(sender_id, response_message)
+                    # Get the reply Message
+                    eliza_response(sender_id, message_text)
 
                 if messaging_event.get("delivery"):  # delivery confirmation
                     pass
