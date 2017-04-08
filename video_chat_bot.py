@@ -1,13 +1,11 @@
 import jwt
 from app import create_app
 from flask import request, make_response, render_template, redirect
-from app.utils import eliza_response
+from app.utils import Utils
 from config import JWT_ALGORITHM, JWT_SECRET
-import logging as logger
-
 
 app = create_app()
-video_call = False
+utils = Utils()
 
 
 @app.route('/', methods=['GET'])
@@ -29,7 +27,7 @@ def webhook():
     data = request.get_json()
     # you may not want to log every incoming message
     # in production, but it's good for testing
-    logger.info(data)
+    print('*******\n', data, '\n#######')
     if not data:
         return make_response("ok", 200)
 
@@ -40,10 +38,10 @@ def webhook():
                 sender_id = messaging_event["sender"]["id"]
                 # recipient_id = messaging_event["recipient"]["id"]
 
-                if messaging_event.get("message"):  # someone sent us a message
+                if messaging_event.get("message"):
                     message_text = messaging_event["message"]["text"]
                     # Get the reply Message
-                    eliza_response(sender_id, message_text)
+                    utils.eliza_response(sender_id, message_text)
 
                 if messaging_event.get("delivery"):  # delivery confirmation
                     pass
@@ -73,7 +71,7 @@ def live_feed():
         data = request.get_cookie('data')
         data = jwt.decode(data, JWT_SECRET, algorithms=JWT_ALGORITHM)
         # Query the infomation from the database
-        # result = Transaction.query.filter_by(data).First()
+        # result = Transaction.query.filter_by(data).first()
     except Exception:
         return redirect('/nonexistent.html')
     return render_template('index.html')
