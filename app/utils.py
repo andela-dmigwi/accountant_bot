@@ -17,6 +17,8 @@ from config import (fb_url, page_access_token, main_url,
 json_headers = {"Content-Type": "application/json"}
 params = {"access_token": page_access_token}
 room_name = ''
+user_not_found = 'User not registered in Facebook'
+something_wrong = 'Something went wrong. We are working on it'
 video_call = False
 
 
@@ -25,6 +27,7 @@ class Utils(object):
     via facebook messager'''
 
     def __init__(self):
+        print('*****MY name is Migwi*******')
         self.video_call = False
 
     def tokenize(self, data):
@@ -51,16 +54,20 @@ class Utils(object):
             # Push data to a database
             Transactions(recipient_data).save()
         except Exception:
-            pass
+            Transactions.rollback()
 
         recipient_token = self.tokenize(recipient_data)
         url = '{}/call/{}'.format(main_url, recipient_token)
         user = self.get_user_details(sender_id)
-        template = join_call_template(user.name, url)
-        self.send_message(recipient_id, template=template)
 
-        sender_token = self.tokenize(sender_data)
-        return redirect('/call/{}'.format(sender_token))
+        if user == user_not_found:
+            self.send_message(sender_id, message_text=something_wrong)
+        else:
+            template = join_call_template(user.name, url)
+            self.send_message(recipient_id, template=template)
+
+            sender_token = self.tokenize(sender_data)
+            return redirect('/call/{}'.format(sender_token))
 
     def send_message(self, recipient_id, message_text=None, template=None):
         data = {
@@ -76,15 +83,15 @@ class Utils(object):
         response = requests.post(url, params=params,
                                  headers=json_headers, data=data)
         if response.status_code != 200:
-            print('Error Code 1:', response)
+            print('Error Code 1:', response.json())
 
     def get_user_details(self, user_id):
         url = "{}/{}".format(fb_url, user_id)
         response = requests.get(url, params=params)
         if 'error' in response:
-            return 'User not registered in Facebook'
-        print('Error Code 2:', response)
-        return response.get_json()
+            print('Error Code 2:', response)
+            return error_message
+        return response.json()
 
     def reflect(self, fragment):
         tokens = fragment.lower().split()
@@ -141,10 +148,13 @@ class Utils(object):
             self.send_message(sender_id, message_text=message_text)
         else:
             # If user not found invite them to join Samurai Community
-            self.video_call = False
             # Send a share template to invite them to Samurai Community
+            self.video_call = False
             user = self.get_user_details(sender_id)
-            self.send_message(sender_id, template=share_template(user))
+            if user == user_not_found:
+                self.send_message(sender_id, message_text=error_message)
+            else:
+                self.send_message(sender_id, template=share_template(user))
 
     def user_registration(self):
         pass
@@ -157,5 +167,6 @@ class Utils(object):
         else:
             # Generate response using eliza
             # Return a message after matching the keys
+            print('>>>>>', self.video_call, '<<<<<<<')
             response = self.match_response(text_message)
             self.send_message(sender_id, message_text=response)

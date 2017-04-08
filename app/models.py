@@ -25,6 +25,10 @@ class Base(db.Model):
         db.session.delete(self)
         db.session.commit()
 
+    def rollback(self):
+        db.session.rollback()
+        db.session.remove()
+
     def get_base(self):
         return {
             'id': self.id if self.id else '',

@@ -39,9 +39,13 @@ def webhook():
                 # recipient_id = messaging_event["recipient"]["id"]
 
                 if messaging_event.get("message"):
-                    message_text = messaging_event["message"]["text"]
-                    # Get the reply Message
-                    utils.eliza_response(sender_id, message_text)
+                    event = messaging_event["message"]
+
+                    if "text" in event:
+                        message_text = event["text"]
+                        utils.eliza_response(sender_id, message_text)
+                    else:
+                        print('No Text Message sent')
 
                 if messaging_event.get("delivery"):  # delivery confirmation
                     pass

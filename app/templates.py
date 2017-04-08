@@ -1,12 +1,14 @@
 # Constants
-SHARE_INVITE = ("User not found, Share an Invite"
-                "with them to join Samurai Community.")
+SHARE_INVITE = ("User not found, Share an Invite "
+                "with them to join The Samurai Community.")
 JOIN = "Join The Samurai Community"
 
 # Templates
 
 
 def share_template(user):
+    name = "{} {}".format(user['first_name'], user['last_name'])
+    text = ("You have been invited by {}").format(name)
     template = {
         "attachment": {
             "type": "template",
@@ -15,25 +17,20 @@ def share_template(user):
                 "elements": [
                     {
                         "title": SHARE_INVITE,
+                        "image_url": (user['profile_pic']),
                         "buttons": [
                             {
                                 "type": "element_share",
                                 "share_contents": {
                                     "attachment": {
                                         "type": "template",
-                                        "image_url": user.image_url,
                                         "payload": {
-                                            "template_type": "button",
-                                            "text": (
-                                                "You have been invited by {}"
-                                                " To Join The Samurai"
-                                                " Community").format(
-                                                user.name),
-                                            "buttons": [
+                                            "template_type": "generic",
+                                            "elements": [
                                                 {
-                                                    "type": "postback",
-                                                    "title": JOIN,
-                                                    "payload": "SIGN UP"
+                                                    "title": text,
+                                                    "image_url": (
+                                                        user['profile_pic'])
                                                 }
                                             ]
                                         }
