@@ -104,19 +104,20 @@ def match_response(text_message):
     for item in options:
         response = analyze(text_message, item)
         if re.match(r'(.*call.*)', text_message):
-            logger.info('match_response 1 : {}'.format(video_call))
+            print('match_response 1 : {}'.format(video_call))
             video_call = True
         if response:
             return response
     else:
         # This should happen if something goes wrong
-        logger.info('match_response 2 : {}'.format(video_call))
+        print('match_response 2 : {}'.format(video_call))
         video_call = False
         return 'Something went wrong. We are working on it'
 
 
 def make_video_call(sender_id, text_message):
     matched_users = Users.query.filter_by(name=text_message).all()
+    print('Making a video call')
     if matched_users and len(matched_users) == 1:
         # If user found is one create a call and join them
         recipient_id = matched_users[0].fb_id
@@ -135,7 +136,7 @@ def make_video_call(sender_id, text_message):
     else:
         # If user not found invite them to join Samurai Community
         from video_chat_bot import video_call
-        logger.info('make_video_call: {}'.format(video_call))
+        print('make_video_call: {}'.format(video_call))
         video_call = False
         # Send a share template to invite them to Samurai Community
         message_text = 'User not found, Invite them to join Samurai Community.'
@@ -148,6 +149,7 @@ def user_registration():
 
 def eliza_response(sender_id, text_message):
     from video_chat_bot import video_call
+    print('Video Call Value : {}'.format(video_call))
     if video_call:
         # Make a Video call
         make_video_call(sender_id, text_message)
