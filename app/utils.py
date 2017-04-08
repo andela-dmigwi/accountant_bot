@@ -9,6 +9,7 @@ from haikunator import Haikunator
 from app.models import Transactions, Users
 from app.kb import (reflections, call,
                     general, psychobabble)
+from app.templates import *
 from config import (fb_url, page_access_token, main_url,
                     JWT_ALGORITHM, JWT_SECRET)
 
@@ -53,13 +54,15 @@ class Utils(object):
             pass
 
         recipient_token = self.tokenize(recipient_data)
-        self.send_message(recipient_id,
-                          'You have been invited to join the following call:'
-                          ' {}/call/{}'.format(main_url, recipient_token))
+        url = '{}/call/{}'.format(main_url, recipient_token)
+        user = self.get_user_details(sender_id)
+        template = join_call_template(user.name, url)
+        self.send_message(recipient_id, template=template)
+
         sender_token = self.tokenize(sender_data)
         return redirect('/call/{}'.format(sender_token))
 
-    def send_message(self, recipient_id, message_text, template=None):
+    def send_message(self, recipient_id, message_text=None, template=None):
         data = {
             "recipient": {"id": recipient_id},
             "message": {"text": message_text}
@@ -70,17 +73,18 @@ class Utils(object):
 
         data = json.dumps(data)
         url = "{}/me/messages".format(fb_url)
-        r = requests.post(url, params=params,
-                          headers=json_headers, data=data)
-        if r.status_code != 200:
-            print(r)
+        response = requests.post(url, params=params,
+                                 headers=json_headers, data=data)
+        if response.status_code != 200:
+            print('Error Code 1:', response)
 
     def get_user_details(self, user_id):
         url = "{}/{}".format(fb_url, user_id)
-        r = requests.get(url, params=params)
-        if r.error:
+        response = requests.get(url, params=params)
+        if 'error' in response:
             return 'User not registered in Facebook'
-        return r.get_json()
+        print('Error Code 2:', response)
+        return response.get_json()
 
     def reflect(self, fragment):
         tokens = fragment.lower().split()
@@ -111,22 +115,24 @@ class Utils(object):
                 return response
         else:
             # This should happen if something goes wrong
-            print('match_response 2 : {}'.format(self.video_call))
             self.video_call = False
             return 'Something went wrong. We are working on it'
 
     def make_video_call(self, sender_id, text_message):
-        matched_users = Users.query.filter_by(name=text_message).all()
-        print('Making a video call: Matched User :::{}'.format(matched_users))
+        matched_users = Users.query.filter(Users.name == text_message,
+                                           Users.fb_id != sender_id).all()
+        # print('Making a video call: Matched User :::{}'.format(
+        # matched_users))
         if matched_users and len(matched_users) == 1:
             # If user found is one create a call and join them
+            self.video_call = False
             recipient_id = matched_users[0].fb_id
             self.call_user(sender_id, recipient_id)
 
         elif matched_users and len(matched_users) < 6:
             # If less than six send the user options to pick from
             # Generate the template
-            self.send_message(sender_id, message_text=None, template='MIgwi')
+            self.send_message(sender_id, message_text='MIgwi', template=None)
 
         elif matched_users and len(matched_users) >= 6:
             # if more than six, Inform the user to try and
@@ -137,9 +143,8 @@ class Utils(object):
             # If user not found invite them to join Samurai Community
             self.video_call = False
             # Send a share template to invite them to Samurai Community
-            message_text = ('User not found, Invite them '
-                            'to join Samurai Community.')
-            self.send_message(sender_id, message_text=message_text)
+            user = self.get_user_details(sender_id)
+            self.send_message(sender_id, template=share_template(user))
 
     def user_registration(self):
         pass

@@ -59,7 +59,7 @@ def webhook():
 @app.route('/call/{id}', methods=['POST'])
 def validate_user():
     if not id:
-        return redirect('/nonexistent.html')
+        return redirect('nonexistent.html')
     response = redirect('/video_call', code=307)
     response.set_cookie('data', value=id)
     return response
@@ -73,5 +73,5 @@ def live_feed():
         # Query the infomation from the database
         # result = Transaction.query.filter_by(data).first()
     except Exception:
-        return redirect('/nonexistent.html')
+        return redirect('nonexistent.html')
     return render_template('index.html')
