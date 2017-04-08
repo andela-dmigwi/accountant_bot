@@ -1,11 +1,13 @@
 import jwt
 from app import create_app
-from flask import request, make_response, render_template
-from app.utils import *
+from flask import request, make_response, render_template, redirect
+from app.utils import eliza_response
 from config import JWT_ALGORITHM, JWT_SECRET
+import logging as logger
 
 
 app = create_app()
+video_call = False
 
 
 @app.route('/', methods=['GET'])
@@ -27,7 +29,7 @@ def webhook():
     data = request.get_json()
     # you may not want to log every incoming message
     # in production, but it's good for testing
-    log(data)
+    logger.info('>>>', data)
     if not data:
         return make_response("ok", 200)
 
@@ -75,7 +77,3 @@ def live_feed():
     except Exception:
         return redirect('/nonexistent.html')
     return render_template('index.html')
-
-
-def log(message):  # simple wrapper for logging to stdout on heroku
-    print(message)
