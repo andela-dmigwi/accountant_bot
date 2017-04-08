@@ -7,8 +7,9 @@ import requests
 # from datetime import datetime
 from flask import redirect
 from haikunator import Haikunator
-from app.models import Transactions
-from app.kb import *
+from app.models import Transactions, Users
+from app.kb import (reflections, call,
+                    general, psychobabble)
 from config import (fb_url, page_access_token, main_url,
                     JWT_ALGORITHM, JWT_SECRET)
 
@@ -97,19 +98,19 @@ def analyze(statement, matching_statement):
 
 
 def match_response(text_message):
-    options = ['call', 'psychobabble', 'general']
+    options = [call, psychobabble, general]
     response = ''
     from video_chat_bot import video_call
     for item in options:
         response = analyze(text_message, item)
-        if re.match(r'(.*)call(.*)', 'call'):
-            logger.info('match_response 1', video_call)
+        if re.match(r'(.*call.*)', text_message):
+            logger.info('match_response 1 : {}'.format(video_call))
             video_call = True
         if response:
             return response
     else:
         # This should happen if something goes wrong
-        logger.info('match_response 2', video_call)
+        logger.info('match_response 2 : {}'.format(video_call))
         video_call = False
         return 'Something went wrong. We are working on it'
 
@@ -134,7 +135,7 @@ def make_video_call(sender_id, text_message):
     else:
         # If user not found invite them to join Samurai Community
         from video_chat_bot import video_call
-        logger.info('make_video_call', video_call)
+        logger.info('make_video_call: {}'.format(video_call))
         video_call = False
         # Send a share template to invite them to Samurai Community
         message_text = 'User not found, Invite them to join Samurai Community.'

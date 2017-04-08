@@ -19,7 +19,8 @@ reflections = {
 call = [
     [r'(.*) call (.*)',
      [("Could you please repeat the FaceBook name "
-       "of the person you want to call ?")]]
+       "of the person you want to call ?"),
+      " Who would you like to call?"]]
 ]
 general = [
     [r'(.*)',
@@ -263,7 +264,7 @@ psychobabble = [
       "What is the connection, do you suppose ?",
       "Could there really be some connection ?",
       "How ?"]],
-    [r'fuck (.*)',
+    [r'(.*fuck.*)',
      ["Does it make you feel strong to use that kind of language?",
       "Are you venting your feelings now?",
       "Are you angry?",

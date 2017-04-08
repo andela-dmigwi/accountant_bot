@@ -29,7 +29,7 @@ def webhook():
     data = request.get_json()
     # you may not want to log every incoming message
     # in production, but it's good for testing
-    logger.info('>>>', data)
+    logger.info(data)
     if not data:
         return make_response("ok", 200)
 
