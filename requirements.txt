@@ -4,4 +4,5 @@ gunicorn==19.6.0
 requests==2.13.0
 flask-sqlalchemy==2.2
 Flask-Migrate==2.0.3
-fbmq==2.0.1
+pyhaikunator==0.0.4
+PyJWT==1.4.2

@@ -1,12 +1,11 @@
-import json
-import requests
+import jwt
 from app import create_app
 from flask import request, make_response, render_template
-from config import page_access_token, fb_url
+from app.utils import *
+from config import JWT_ALGORITHM, JWT_SECRET
 
 
 app = create_app()
-params = {"access_token": page_access_token}
 
 
 @app.route('/', methods=['GET'])
@@ -40,8 +39,20 @@ def webhook():
                 # recipient_id = messaging_event["recipient"]["id"]
 
                 if messaging_event.get("message"):  # someone sent us a message
-                    # message_text = messaging_event["message"]["text"]
-                    send_message(sender_id, "got it, thanks!")
+                    response_message = ''
+                    message_text = messaging_event["message"]["text"]
+                    # Get the First reponse Choice
+                    response_message = get_response_one(message_text)
+
+                    # Make a call if the user exist
+                    if not response_message:
+                        response_message = get_response_two(message_text)
+
+                    # Get Third Response choice
+                    if not response_message:
+                        response_message = get_response_three(message_text)
+
+                    send_message(sender_id, response_message)
 
                 if messaging_event.get("delivery"):  # delivery confirmation
                     pass
@@ -56,23 +67,25 @@ def webhook():
     return make_response("ok", 200)
 
 
-@app.route('/call/{id}', methods=['GET'])
+@app.route('/call/{id}', methods=['POST'])
+def validate_user():
+    if not id:
+        return redirect('/nonexistent.html')
+    response = redirect('/video_call', code=307)
+    response.set_cookie('data', value=id)
+    return response
+
+
+@app.route('/video_call', methods=['POST'])
 def live_feed():
+    try:
+        data = request.get_cookie('data')
+        data = jwt.decode(data, JWT_SECRET, algorithms=JWT_ALGORITHM)
+        # Query the infomation from the database
+        # result = Transaction.query.filter_by(data).First()
+    except Exception:
+        return redirect('/nonexistent.html')
     return render_template('index.html')
-
-
-def send_message(recipient_id, message_text):
-    headers = {"Content-Type": "application/json"}
-    data = json.dumps({
-        "recipient": {"id": recipient_id},
-        "message": {"text": message_text}
-    })
-    url = fb_url + "/me/messages"
-    r = requests.post(url, params=params,
-                      headers=headers, data=data)
-    if r.status_code != 200:
-        log(r.status_code)
-        log(r.text)
 
 
 def log(message):  # simple wrapper for logging to stdout on heroku
