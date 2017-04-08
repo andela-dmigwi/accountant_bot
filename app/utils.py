@@ -1,10 +1,15 @@
+import re
 import jwt
 import json
+import random
+import logging as logger
 import requests
 # from datetime import datetime
 from flask import redirect
 from haikunator import Haikunator
-from app.models import Transactions
+from app.models import Transactions, Users
+from app.kb import (reflections, call,
+                    general, psychobabble)
 from config import (fb_url, page_access_token, main_url,
                     JWT_ALGORITHM, JWT_SECRET)
 
@@ -70,22 +75,86 @@ def get_user_details(user_id):
     url = "{}/{}".format(fb_url, user_id)
     r = requests.get(url, params=params)
     if r.error:
-        return 'User not found'
+        return 'User not registered in Facebook'
     return r.get_json()
 
 
-def get_response_one(text_message):
-    # Return a message after matching the keys
-    return 'got it, Thanks!'
+def reflect(fragment):
+    tokens = fragment.lower().split()
+    for i, token in enumerate(tokens):
+        if token in reflections:
+            tokens[i] = reflections[token]
+    return ' '.join(tokens)
 
 
-def get_response_two(text_message):
-    # If user found is one create a call and join them
-    # If they are more than less than five send the user options to pick from
-    # Inform the user to try and complete the other names as in Facebook
-    return ''
+def analyze(statement, matching_statement):
+    for pattern, responses in matching_statement:
+        match = re.match(pattern, statement.rstrip(".!"))
+        if match:
+            response = random.choice(responses)
+            return response.format(*[reflect(g) for g in match.groups()])
+    else:
+        return ''
 
 
-def get_response_three(text_message):
-    # Return a general message as the first two ptions failed
-    return ''
+def match_response(text_message):
+    options = [call, psychobabble, general]
+    response = ''
+    from video_chat_bot import video_call
+    for item in options:
+        response = analyze(text_message, item)
+        if re.match(r'(.*call.*)', text_message):
+            print('match_response 1 : {}'.format(video_call))
+            video_call = True
+        if response:
+            return response
+    else:
+        # This should happen if something goes wrong
+        print('match_response 2 : {}'.format(video_call))
+        video_call = False
+        return 'Something went wrong. We are working on it'
+
+
+def make_video_call(sender_id, text_message):
+    matched_users = Users.query.filter_by(name=text_message).all()
+    print('Making a video call')
+    if matched_users and len(matched_users) == 1:
+        # If user found is one create a call and join them
+        recipient_id = matched_users[0].fb_id
+        call_user(sender_id, recipient_id)
+
+    elif matched_users and len(matched_users) < 6:
+        # If less than six send the user options to pick from
+        # Generate the template
+        send_message(sender_id, message_text=None, template='MIgwi')
+
+    elif matched_users and len(matched_users) >= 6:
+        # if more than six, Inform the user to try and
+        # complete the other names as in Facebook
+        message_text = 'Too many matches found, Please complete the name..'
+        send_message(sender_id, message_text=message_text)
+    else:
+        # If user not found invite them to join Samurai Community
+        from video_chat_bot import video_call
+        print('make_video_call: {}'.format(video_call))
+        video_call = False
+        # Send a share template to invite them to Samurai Community
+        message_text = 'User not found, Invite them to join Samurai Community.'
+        send_message(sender_id, message_text=message_text)
+
+
+def user_registration():
+    pass
+
+
+def eliza_response(sender_id, text_message):
+    from video_chat_bot import video_call
+    print('Video Call Value : {}'.format(video_call))
+    if video_call:
+        # Make a Video call
+        make_video_call(sender_id, text_message)
+    else:
+        # Generate response using eliza
+        # Return a message after matching the keys
+        response = match_response(text_message)
+        send_message(sender_id, message_text=response)
