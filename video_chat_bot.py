@@ -34,28 +34,38 @@ def webhook():
     if data["object"] == "page":
 
         for entry in data["entry"]:
-            for messaging_event in entry["messaging"]:
+            if 'messaging' in entry:
+                for messaging_event in entry["messaging"]:
+                    sender_id = messaging_event["sender"]["id"]
+                    # recipient_id = messaging_event["recipient"]["id"]
+
+                    if messaging_event.get("message"):
+                        event = messaging_event["message"]
+
+                        if "text" in event:
+                            message_text = event["text"]
+                            utils.eliza_response(sender_id, message_text)
+                        else:
+                            print('No Text Message sent')
+
+                    # delivery confirmation
+                    if messaging_event.get("delivery"):
+                        pass
+
+                    # optin confirmation
+                    if messaging_event.get("optin"):
+                        pass
+
+                    # user clicked/tapped "postback" button in earlier message
+                    if messaging_event.get("postback"):
+                        postback = messaging_event["postback"]["payload"]
+                        utils.postback(user_id=sender_id,
+                                       message_text=postback)
+            else:
+                print('Metadata file was sent')
+                print('>>>>>>>::\n', entry, '::<<<<<<')
                 sender_id = messaging_event["sender"]["id"]
-                # recipient_id = messaging_event["recipient"]["id"]
-
-                if messaging_event.get("message"):
-                    event = messaging_event["message"]
-
-                    if "text" in event:
-                        message_text = event["text"]
-                        utils.eliza_response(sender_id, message_text)
-                    else:
-                        print('No Text Message sent')
-
-                if messaging_event.get("delivery"):  # delivery confirmation
-                    pass
-
-                if messaging_event.get("optin"):  # optin confirmation
-                    pass
-
-                # user clicked/tapped "postback" button in earlier message
-                if messaging_event.get("postback"):
-                    pass
+                utils.eliza_response(sender_id, 'computers')
 
     return make_response("ok", 200)
 

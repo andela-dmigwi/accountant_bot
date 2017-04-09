@@ -39,7 +39,7 @@ class Base(db.Model):
 
 class Users(Base):
     name = db.Column(db.String(255))
-    fb_id = db.Column(db.Integer)
+    fb_id = db.Column(db.Integer, unique=True)
     transactions = db.relationship('Transactions', backref='users',
                                    lazy='dynamic')
     __tableargs__ = db.UniqueConstraint('name', 'fb_id')

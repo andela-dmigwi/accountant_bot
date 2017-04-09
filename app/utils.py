@@ -3,7 +3,7 @@ import jwt
 import json
 import random
 import requests
-from flask import redirect
+from flask import redirect, g
 from haikunator import Haikunator
 from app.models import Transactions, Users
 from app.kb import (reflections, call,
@@ -15,7 +15,6 @@ from config import (fb_url, page_access_token, main_url,
 
 params = {"access_token": page_access_token}
 room_name = ''
-video_call = False
 
 
 class Utils(object):
@@ -23,12 +22,18 @@ class Utils(object):
     via facebook messager'''
 
     def __init__(self):
-        print('*****MY name is Migwi*******')
-        self.video_call = False
+        '''VideoCall hold a set of id{'id'}'''
+        self.video_call = set({})
 
     def tokenize(self, data):
         token = jwt.encode(data, JWT_SECRET, JWT_ALGORITHM)
         return token
+
+    def user_contexts(self, type='remove'):
+        if type is 'add':
+            self.video_call.add(g.sender_id)
+        else:
+            self.video_call.discard(g.sender_id)
 
     def call_user(self, sender_id, recipient_id):
         sender_details = Transactions.query.filter_by(
@@ -79,14 +84,15 @@ class Utils(object):
         response = requests.post(url, params=params,
                                  headers=json_headers, data=data)
         if response.status_code != 200:
-            print('Error Code 1:', response.json())
+            print('Error Code 1:', response.json(),
+                  '\n User_id: ', recipient_id)
 
     def get_user_details(self, user_id):
         url = "{}/{}".format(fb_url, user_id)
         response = requests.get(url, params=params)
         if 'error' in response:
-            print('Error Code 2:', response)
-            return error_message
+            print('Error Code 2:', response.json())
+            return user_not_found
         return response.json()
 
     def reflect(self, fragment):
@@ -112,54 +118,69 @@ class Utils(object):
         for item in options:
             response = self.analyze(text_message, item)
             if re.match(r'(.*call.*)', text_message):
-                print('match_response 1 : {}'.format(self.video_call))
-                self.video_call = True
+                self.user_contexts(type='add')
             if response:
                 return response
         else:
             # This should happen if something goes wrong
-            self.video_call = False
-            return 'Something went wrong. We are working on it'
+            self.user_contexts()
+            print('Error Code 3: *********')
+            return something_wrong
 
     def make_video_call(self, sender_id, text_message):
         matched_users = Users.query.filter(Users.name == text_message,
                                            Users.fb_id != sender_id).all()
-        # print('Making a video call: Matched User :::{}'.format(
-        # matched_users))
         if matched_users and len(matched_users) == 1:
             # If user found is one create a call and join them
-            self.video_call = False
+            self.user_contexts()
             recipient_id = matched_users[0].fb_id
             self.call_user(sender_id, recipient_id)
 
         elif matched_users and len(matched_users) < 6:
             # If less than six send the user options to pick from
             # Generate the template
-            self.send_message(sender_id, message_text='MIgwi', template=None)
+            self.send_message(sender_id, message_text='TM', template=None)
 
         elif matched_users and len(matched_users) >= 6:
             # if more than six, Inform the user to try and
             # complete the other names as in Facebook
-            message_text = 'Too many matches found, Please complete the name..'
-            self.send_message(sender_id, message_text=message_text)
+            self.send_message(sender_id, message_text=many_matches)
         else:
             # If user not found invite them to join Samurai Community
             # Send a share template to invite them to Samurai Community
-            self.video_call = False
+            self.user_contexts()
             self.send_message(sender_id, message_text=SHARE_INVITE)
             self.send_message(sender_id, template=share_template())
 
-    def user_registration(self):
-        pass
+    def postback(self, user_id, message_text):
+        text = ''
+        print('Postback >>', message_text)
+        if message_text == 'SIGN_UP':
+            text = self.user_registration(user_id)
+        else:
+            text = self.match_response(message_text)
+        self.send_message(user_id, message_text=text)
+
+    def user_registration(self, user_id):
+        g.sender_id = user_id
+        user = self.get_user_details(user_id)
+        if user is user_not_found:
+            return user_not_found
+        else:
+            try:
+                name = "{} {}".format(user['first_name'], user['last_name'])
+                Users(name=name, fb_id=user_id).save()
+                return welcome_text
+            except Exception:
+                return self.match_response('Hello')
 
     def eliza_response(self, sender_id, text_message):
-        if self.video_call:
+        g.sender_id = sender_id
+        if sender_id in self.video_call:
             # Make a Video call
-            print('<<<<<', self.video_call, '>>>>>>')
             self.make_video_call(sender_id, text_message)
         else:
             # Generate response using eliza
             # Return a message after matching the keys
-            print('>>>>>', self.video_call, '<<<<<<<')
             response = self.match_response(text_message)
             self.send_message(sender_id, message_text=response)

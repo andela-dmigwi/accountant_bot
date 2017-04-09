@@ -1,10 +1,14 @@
 # Constants
-SHARE_INVITE = ("User not found, Share an Invite"
-                "with them to join Samurai Community.")
+SHARE_INVITE = ("User not found, Share an Invite "
+                "with them to join the Samurai Community.")
 JOIN = "Join The Samurai Community"
 
 
 json_headers = {"Content-Type": "application/json"}
+welcome_text = ("Welcome to the The Samurai Community,"
+                " you can chat with me; the Samurai Bot"
+                " or easily make a video call to your FaceBook"
+                " friends with my help.")
 user_not_found = 'User not registered in Facebook'
 something_wrong = 'Something went wrong. We are working on it'
 many_matches = 'Too many matches found, Please complete the name..'
@@ -27,7 +31,7 @@ def share_template():
                 "template_type": "generic",
                 "elements": [
                     {
-                        "title": "The Samurai Community",
+                        "title": "Samurai Community, 'On FB Messanger'",
                         "subtitle": text,
                         "image_url": profile_pic,
                         "buttons": [
