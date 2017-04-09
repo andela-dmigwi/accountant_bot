@@ -1,3 +1,6 @@
+''' Created by Migwi Ndung'u
+    @ The Samurai Community 2017
+'''
 import uuid
 from flask_sqlalchemy import SQLAlchemy
 
@@ -25,6 +28,10 @@ class Base(db.Model):
         db.session.delete(self)
         db.session.commit()
 
+    def rollback(self):
+        db.session.rollback()
+        db.session.remove()
+
     def get_base(self):
         return {
             'id': self.id if self.id else '',
@@ -35,7 +42,7 @@ class Base(db.Model):
 
 class Users(Base):
     name = db.Column(db.String(255))
-    fb_id = db.Column(db.Integer)
+    fb_id = db.Column(db.Integer, unique=True)
     transactions = db.relationship('Transactions', backref='users',
                                    lazy='dynamic')
     __tableargs__ = db.UniqueConstraint('name', 'fb_id')

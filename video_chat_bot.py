@@ -1,13 +1,14 @@
+''' Created by Migwi Ndung'u
+    @ The Samurai Community 2017
+'''
 import jwt
 from app import create_app
 from flask import request, make_response, render_template, redirect
-from app.utils import eliza_response
+from app.utils import Utils
 from config import JWT_ALGORITHM, JWT_SECRET
-import logging as logger
-
 
 app = create_app()
-video_call = False
+utils = Utils()
 
 
 @app.route('/', methods=['GET'])
@@ -29,31 +30,45 @@ def webhook():
     data = request.get_json()
     # you may not want to log every incoming message
     # in production, but it's good for testing
-    logger.info(data)
+    print('*******\n', data, '\n#######')
     if not data:
         return make_response("ok", 200)
 
     if data["object"] == "page":
 
         for entry in data["entry"]:
-            for messaging_event in entry["messaging"]:
+            if 'messaging' in entry:
+                for messaging_event in entry["messaging"]:
+                    sender_id = messaging_event["sender"]["id"]
+                    # recipient_id = messaging_event["recipient"]["id"]
+
+                    if messaging_event.get("message"):
+                        event = messaging_event["message"]
+
+                        if "text" in event:
+                            message_text = event["text"]
+                            utils.eliza_response(sender_id, message_text)
+                        else:
+                            print('No Text Message sent')
+
+                    # delivery confirmation
+                    if messaging_event.get("delivery"):
+                        pass
+
+                    # optin confirmation
+                    if messaging_event.get("optin"):
+                        pass
+
+                    # user clicked/tapped "postback" button in earlier message
+                    if messaging_event.get("postback"):
+                        postback = messaging_event["postback"]["payload"]
+                        utils.postback(user_id=sender_id,
+                                       message_text=postback)
+            else:
+                print('Metadata file was sent')
+                print('>>>>>>>::\n', entry, '::<<<<<<')
                 sender_id = messaging_event["sender"]["id"]
-                # recipient_id = messaging_event["recipient"]["id"]
-
-                if messaging_event.get("message"):  # someone sent us a message
-                    message_text = messaging_event["message"]["text"]
-                    # Get the reply Message
-                    eliza_response(sender_id, message_text)
-
-                if messaging_event.get("delivery"):  # delivery confirmation
-                    pass
-
-                if messaging_event.get("optin"):  # optin confirmation
-                    pass
-
-                # user clicked/tapped "postback" button in earlier message
-                if messaging_event.get("postback"):
-                    pass
+                utils.eliza_response(sender_id, 'computers')
 
     return make_response("ok", 200)
 
@@ -61,7 +76,7 @@ def webhook():
 @app.route('/call/{id}', methods=['POST'])
 def validate_user():
     if not id:
-        return redirect('/nonexistent.html')
+        return redirect('nonexistent.html')
     response = redirect('/video_call', code=307)
     response.set_cookie('data', value=id)
     return response
@@ -73,7 +88,7 @@ def live_feed():
         data = request.get_cookie('data')
         data = jwt.decode(data, JWT_SECRET, algorithms=JWT_ALGORITHM)
         # Query the infomation from the database
-        # result = Transaction.query.filter_by(data).First()
+        # result = Transaction.query.filter_by(data).first()
     except Exception:
-        return redirect('/nonexistent.html')
+        return redirect('nonexistent.html')
     return render_template('index.html')
