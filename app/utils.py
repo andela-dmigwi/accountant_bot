@@ -128,8 +128,10 @@ class Utils(object):
             return something_wrong
 
     def make_video_call(self, sender_id, text_message):
-        matched_users = Users.query.filter(Users.name == text_message,
-                                           Users.fb_id != sender_id).all()
+        matched_users = Users.query.filter(
+            Users.name.contains(text_message),
+            Users.fb_id != sender_id
+        ).all()
         if matched_users and len(matched_users) == 1:
             # If user found is one create a call and join them
             self.user_contexts()
@@ -137,9 +139,20 @@ class Utils(object):
             self.call_user(sender_id, recipient_id)
 
         elif matched_users and len(matched_users) < 6:
-            # If less than six send the user options to pick from
-            # Generate the template
-            self.send_message(sender_id, message_text='TM', template=None)
+            # If 5 users, Generate quick replies template
+            user_details = []
+            for user in matched_users:
+                profile_pic = default_profile_pic
+                retrieved_user = self.get_user_details(user.fb_id)
+                if 'profile_pic' in retrieved_user:
+                    profile_pic = retrieved_user['profile_pic']
+                user_details.append(
+                    {"name": user.name,
+                     "profile_pic": profile_pic}
+                )
+            else:
+                template = quick_replies_template(user_details)
+            self.send_message(sender_id, template=template)
 
         elif matched_users and len(matched_users) >= 6:
             # if more than six, Inform the user to try and
@@ -154,7 +167,6 @@ class Utils(object):
 
     def postback(self, user_id, message_text):
         text = ''
-        print('Postback >>', message_text)
         if message_text == 'SIGN_UP':
             text = self.user_registration(user_id)
         else:
