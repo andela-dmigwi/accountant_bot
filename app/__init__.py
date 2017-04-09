@@ -1,3 +1,6 @@
+''' Created by Migwi Ndung'u
+    @ The Samurai Community 2017
+'''
 from flask import Flask
 from app.models import db
 

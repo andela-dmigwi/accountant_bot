@@ -1,3 +1,6 @@
+''' Created by Migwi Ndung'u
+    @ The Samurai Community 2017
+'''
 # Constants
 SHARE_INVITE = ("User not found, Share an Invite "
                 "with them to join the Samurai Community.")

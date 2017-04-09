@@ -1,3 +1,6 @@
+''' Created by Migwi Ndung'u
+    @ The Samurai Community 2017
+'''
 import jwt
 from app import create_app
 from flask import request, make_response, render_template, redirect

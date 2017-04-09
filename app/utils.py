@@ -1,3 +1,6 @@
+''' Created by Migwi Ndung'u 
+    @ The Samurai Community 2017
+'''
 import re
 import jwt
 import json
@@ -22,7 +25,7 @@ class Utils(object):
     via facebook messager'''
 
     def __init__(self):
-        '''VideoCall hold a set of id{'id'}'''
+        '''VideoCall holds set({'id'})'''
         self.video_call = set({})
 
     def tokenize(self, data):

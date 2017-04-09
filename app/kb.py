@@ -1,4 +1,7 @@
-'''This file should hold eliza's Knowledge Base'''
+''' Created by Migwi Ndung'u
+    @ The Samurai Community 2017
+    This file should hold eliza's Knowledge Base
+'''
 
 reflections = {
     "am": "are",

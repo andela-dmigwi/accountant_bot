@@ -1,3 +1,6 @@
+''' Created by Migwi Ndung'u
+    @ The Samurai Community 2017
+'''
 from video_chat_bot import app
 from app.models import db
 from flask_migrate import Migrate, MigrateCommand

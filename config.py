@@ -1,3 +1,6 @@
+''' Created by Migwi Ndung'u
+    @ The Samurai Community 2017
+'''
 import os
 from dotenv import load_dotenv, find_dotenv
 

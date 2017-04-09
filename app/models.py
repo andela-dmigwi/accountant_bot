@@ -1,3 +1,6 @@
+''' Created by Migwi Ndung'u
+    @ The Samurai Community 2017
+'''
 import uuid
 from flask_sqlalchemy import SQLAlchemy
 
