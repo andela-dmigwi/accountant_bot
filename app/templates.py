@@ -1,14 +1,25 @@
 # Constants
-SHARE_INVITE = ("User not found, Share an Invite "
-                "with them to join The Samurai Community.")
+SHARE_INVITE = ("User not found, Share an Invite"
+                "with them to join Samurai Community.")
 JOIN = "Join The Samurai Community"
+
+
+json_headers = {"Content-Type": "application/json"}
+user_not_found = 'User not registered in Facebook'
+something_wrong = 'Something went wrong. We are working on it'
+many_matches = 'Too many matches found, Please complete the name..'
 
 # Templates
 
 
-def share_template(user):
-    name = "{} {}".format(user['first_name'], user['last_name'])
-    text = ("You have been invited by {}").format(name)
+def share_template():
+    text = ("You have been invited to join "
+            "The Samurai Community; "
+            "powered by Honor and Integrity")
+    profile_pic = ("https://scontent-jnb1-1.xx.fbcdn.net/v/"
+                   "t31.0-8/17760915_1884046905206085_8625392042052170"
+                   "49_o.jpg?oh=987d6e23d447869ed649c17a98b02"
+                   "cc8&oe=599A7F12")
     template = {
         "attachment": {
             "type": "template",
@@ -16,26 +27,12 @@ def share_template(user):
                 "template_type": "generic",
                 "elements": [
                     {
-                        "title": SHARE_INVITE,
-                        "image_url": (user['profile_pic']),
+                        "title": "The Samurai Community",
+                        "subtitle": text,
+                        "image_url": profile_pic,
                         "buttons": [
                             {
-                                "type": "element_share",
-                                "share_contents": {
-                                    "attachment": {
-                                        "type": "template",
-                                        "payload": {
-                                            "template_type": "generic",
-                                            "elements": [
-                                                {
-                                                    "title": text,
-                                                    "image_url": (
-                                                        user['profile_pic'])
-                                                }
-                                            ]
-                                        }
-                                    }
-                                }
+                                "type": "element_share"
                             }
                         ]
                     }

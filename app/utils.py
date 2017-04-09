@@ -3,7 +3,6 @@ import jwt
 import json
 import random
 import requests
-# from datetime import datetime
 from flask import redirect
 from haikunator import Haikunator
 from app.models import Transactions, Users
@@ -14,11 +13,8 @@ from config import (fb_url, page_access_token, main_url,
                     JWT_ALGORITHM, JWT_SECRET)
 
 
-json_headers = {"Content-Type": "application/json"}
 params = {"access_token": page_access_token}
 room_name = ''
-user_not_found = 'User not registered in Facebook'
-something_wrong = 'Something went wrong. We are working on it'
 video_call = False
 
 
@@ -150,11 +146,8 @@ class Utils(object):
             # If user not found invite them to join Samurai Community
             # Send a share template to invite them to Samurai Community
             self.video_call = False
-            user = self.get_user_details(sender_id)
-            if user == user_not_found:
-                self.send_message(sender_id, message_text=error_message)
-            else:
-                self.send_message(sender_id, template=share_template(user))
+            self.send_message(sender_id, message_text=SHARE_INVITE)
+            self.send_message(sender_id, template=share_template())
 
     def user_registration(self):
         pass
