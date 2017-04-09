@@ -1,4 +1,4 @@
-''' Created by Migwi Ndung'u 
+''' Created by Migwi Ndung'u
     @ The Samurai Community 2017
 '''
 import re
@@ -40,15 +40,15 @@ class Utils(object):
 
     def call_user(self, sender_id, recipient_id):
         sender_details = Transactions.query.filter_by(
-            sender_id=sender_id).first()
+            user=sender_id).first()
         sender_data = ''
         recipient_data = ''
 
         # Check if a session created by sender exists
-        if (sender_details.session):
-            session = sender_details.session
+        if 'session' in sender_details:
+            session = sender_details['session']
         else:
-            sender_data = {"user": recipient_id,
+            sender_data = {"user": sender_id,
                            "session": Haikunator.haikunate()}
             Transactions(sender_data).save()
 
@@ -58,7 +58,7 @@ class Utils(object):
             # Push data to a database
             Transactions(recipient_data).save()
         except Exception:
-            Transactions.rollback()
+            pass
 
         recipient_token = self.tokenize(recipient_data)
         url = '{}/call/{}'.format(main_url, recipient_token)
@@ -120,7 +120,7 @@ class Utils(object):
         response = ''
         for item in options:
             response = self.analyze(text_message, item)
-            if re.match(r'(.*call.*)', text_message):
+            if re.match(r'(\s*call\s*)', text_message):
                 self.user_contexts(type='add')
             if response:
                 return response
@@ -135,14 +135,16 @@ class Utils(object):
             Users.name.contains(text_message),
             Users.fb_id != sender_id
         ).all()
-        if matched_users and len(matched_users) == 1:
+        count_users = len(matched_users)
+        if count_users == 1:
             # If user found is one create a call and join them
             self.user_contexts()
             recipient_id = matched_users[0].fb_id
             self.call_user(sender_id, recipient_id)
 
-        elif matched_users and len(matched_users) < 6:
+        elif count_users < 6 and count_users > 1:
             # If 5 users, Generate quick replies template
+            print('Error 313123213', matched_users)
             user_details = []
             for user in matched_users:
                 profile_pic = default_profile_pic
@@ -157,7 +159,7 @@ class Utils(object):
                 template = quick_replies_template(user_details)
             self.send_message(sender_id, template=template)
 
-        elif matched_users and len(matched_users) >= 6:
+        elif count_users >= 6:
             # if more than six, Inform the user to try and
             # complete the other names as in Facebook
             self.send_message(sender_id, message_text=many_matches)
@@ -169,6 +171,7 @@ class Utils(object):
             self.send_message(sender_id, template=share_template())
 
     def postback(self, user_id, message_text):
+        g.sender_id = user_id
         text = ''
         if message_text == 'SIGN_UP':
             text = self.user_registration(user_id)
@@ -177,7 +180,6 @@ class Utils(object):
         self.send_message(user_id, message_text=text)
 
     def user_registration(self, user_id):
-        g.sender_id = user_id
         user = self.get_user_details(user_id)
         if user is user_not_found:
             return user_not_found
@@ -193,7 +195,11 @@ class Utils(object):
         g.sender_id = sender_id
         if sender_id in self.video_call:
             # Make a Video call
-            self.make_video_call(sender_id, text_message)
+            try:
+                self.make_video_call(sender_id, text_message)
+            except Exception as e:
+                print('Error Code 4:', e)
+                self.send_message(sender_id, message_text=something_wrong)
         else:
             # Generate response using eliza
             # Return a message after matching the keys

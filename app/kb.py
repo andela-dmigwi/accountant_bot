@@ -20,7 +20,7 @@ reflections = {
     "me": "you"
 }
 call = [
-    [r'(.*call.*)',
+    [r'(\s*call\s*)',
      [("Could you please repeat the FaceBook name "
        "of the person you want to call ?"),
       " Who would you like to call?"]]

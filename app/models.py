@@ -9,7 +9,7 @@ db = SQLAlchemy()
 
 class Base(db.Model):
     __abstract__ = True
-    id = db.Column(db.String(255), default=uuid.uuid4().hex,
+    id = db.Column(db.String(255), default=lambda: uuid.uuid4().hex,
                    primary_key=True)
     date_created = db.Column(db.DateTime(), default=db.func.now())
     date_modified = db.Column(db.DateTime(), default=db.func.now(),

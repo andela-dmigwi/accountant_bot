@@ -5,6 +5,7 @@ import jwt
 from app import create_app
 from flask import request, make_response, render_template, redirect
 from app.utils import Utils
+from app.models import Transactions
 from config import JWT_ALGORITHM, JWT_SECRET
 
 app = create_app()
@@ -28,8 +29,6 @@ def webhook():
     # endpoint for processing incoming messaging events
 
     data = request.get_json()
-    # you may not want to log every incoming message
-    # in production, but it's good for testing
     print('*******\n', data, '\n#######')
     if not data:
         return make_response("ok", 200)
@@ -88,7 +87,9 @@ def live_feed():
         data = request.get_cookie('data')
         data = jwt.decode(data, JWT_SECRET, algorithms=JWT_ALGORITHM)
         # Query the infomation from the database
-        # result = Transaction.query.filter_by(data).first()
+        result = Transactions.query.filter_by(data).first()
+        if not result:
+            return redirect('nonexistent.html')
     except Exception:
         return redirect('nonexistent.html')
     return render_template('index.html')
